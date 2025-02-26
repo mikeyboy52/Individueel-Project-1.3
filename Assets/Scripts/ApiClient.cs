@@ -15,7 +15,7 @@ public class APIClient : MonoBehaviour
         };
         var jsondata = JsonUtility.ToJson(request);
         Debug.Log(jsondata);
-        await PerformApiCall("https://localhost:7032/account/register", "Post", jsondata);
+        await PerformApiCall("https://avansict2227459.azurewebsites.net/account/register", "POST", jsondata);
     }
     public async void Login(string email, string password)
     {
@@ -25,7 +25,7 @@ public class APIClient : MonoBehaviour
             password = password
         };
         var jsondata = JsonUtility.ToJson(request);
-        var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/account/login", "Post", jsondata);
+        var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/account/login", "POST", jsondata);
         var responseDto = JsonUtility.FromJson<PostLoginResponseDto>(response);
         Debug.Log(responseDto.accessToken);
         token = responseDto.accessToken;

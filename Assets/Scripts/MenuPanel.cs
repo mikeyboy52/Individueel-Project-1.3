@@ -23,6 +23,5 @@ public class MenuPanel : MonoBehaviour
     public void HideMenu(bool show)
     {
         Menu.gameObject.SetActive(show);
-        Debug.Log("Menu Inactive");
     }
 }
