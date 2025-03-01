@@ -7,7 +7,6 @@ public class InputManagement : MonoBehaviour
     public TMP_InputField EmailInput;
     public TMP_InputField PasswordInput;
     public GameObject Text;
-    public APIClient apiClient;
     private string Email;
     private string Password;
     public void Start()
@@ -29,9 +28,34 @@ public class InputManagement : MonoBehaviour
         if (Email != null && Password != null)
         {
             Text.gameObject.SetActive(false);
-            Debug.Log("Started");
-            apiClient.Register(Email, Password);
-            Debug.Log("Succes");
+            APIClient.Instance.Register(Email, Password);
+            
+        }
+        else
+        {
+            Text.gameObject.SetActive(true);
+            Debug.Log("Invalid");
+        }
+    }
+    public void ReadLoginUsernameInput()
+    {
+        Email = EmailInput.text;
+
+    }
+    public void ReadLoginPasswordInput()
+    {
+        Password = PasswordInput.text;
+
+    }
+    public void LoginButton()
+    {
+        Debug.Log("Button pressed");
+        if (Email != null && Password != null)
+        {
+            Debug.Log("Debug: Mail and Password not null");
+            Text.gameObject.SetActive(false);
+            Debug.Log(Email);
+            APIClient.Instance.Login(Email, Password);
         }
         else
         {
