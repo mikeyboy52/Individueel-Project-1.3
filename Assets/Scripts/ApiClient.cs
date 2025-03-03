@@ -4,10 +4,13 @@ using UnityEngine.Networking;
 using UnityEngine;
 using System.Net.Cache;
 using UnityEngine.SceneManagement;
+using UnityEditor;
 
 public class APIClient : MonoBehaviour
 {
     string token;
+    string Email;
+    string Worldname;
     public static APIClient Instance { get; private set; }
     void Awake()
     {
@@ -23,6 +26,7 @@ public class APIClient : MonoBehaviour
     }
     public async void Register(string email, string password)
     {
+        Email = email;
         var request = new PostRegisterRequestDto()
         {
             email = email,
@@ -33,12 +37,21 @@ public class APIClient : MonoBehaviour
         if (response != null)
         {
             Debug.Log("Succesfully Registered");
-            Login(email, password);
+            var login = await Login(email, password);
+            if (login == null)
+            {
+                Debug.Log("Login failed");
+            }
         }
 
     }
-    public async void Login(string email, string password)
+    public async Task<string> Login(string email, string password)
     {
+        if (Email != email)
+        {
+            Email = email;
+        }
+        
         var request = new PostLoginRequestDto()
         {
             email = email,
@@ -53,30 +66,51 @@ public class APIClient : MonoBehaviour
             Debug.Log(responseDto.accessToken);
             token = responseDto.accessToken;
             SceneManager.LoadScene("WorldSelection");
+            return "Succes";
+        }
+        else
+        {
+            return null;
         }
     }
     public async void CreateWorld(string worldname)
     {
         var request = new PostCreateWorldRequestDto()
         {
-            Worldname = worldname
+            Name = worldname,
+            Email = Email,
+            Maxheight = 120,
+            MaxLength = 120
         };
         var jsondata = JsonUtility.ToJson(request);
         var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/Enviroment", "POST", jsondata, token);
         if (response != null)
         {
             Debug.Log("Succesfully created a new world");
+            Worldname = worldname;
         }
     }
-    public async void EditWorld(string worldname)
+    public async void GetAllWorldsForUser()
     {
-        var request = new PostCreateWorldRequestDto()
+        var request = new GetWorldsOfUserDto()
         {
-            Worldname = worldname
+            Email = Email
         };
         var jsondata = JsonUtility.ToJson(request);
-        var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/Enviroment", "GET", jsondata, token);
-    }
+        var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/Enviroment/", "GET", jsondata, token);
+    } 
+    //public async void EditWorld(string worldname)
+    //{
+    //    var request = new PostCreateWorldRequestDto()
+    //    {
+    //        Name = worldname,
+    //        Email = Email,
+    //        Maxheight = 120,
+    //        MaxLength = 120
+    //    };
+    //    var jsondata = JsonUtility.ToJson(request);
+    //    var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/Enviroment", "GET", jsondata, token);
+    //}
     private async Task<string> PerformApiCall(string url, string method, string jsonData = null, string token = null)
     {
         using (UnityWebRequest request = new UnityWebRequest(url, method))
@@ -108,7 +142,11 @@ public class APIClient : MonoBehaviour
                 if (request.error == "HTTP/1.1 400 Bad Request")
                 {
 
-                    Debug.Log("Email or Password invalid");
+                    Debug.Log("Request Not good");
+                }
+                else if (request.error == "HTTP/1.1 401 Unauthorized")
+                {
+                    Debug.Log("Not Authorized");
                 }
                 else
                 {

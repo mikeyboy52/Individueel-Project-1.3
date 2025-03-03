@@ -47,15 +47,22 @@ public class InputManagement : MonoBehaviour
         Password = PasswordInput.text;
 
     }
-    public void LoginButton()
+    public async void LoginButton()
     {
         Debug.Log("Button pressed");
         if (Email != null && Password != null)
         {
             Debug.Log("Debug: Mail and Password not null");
-            Text.gameObject.SetActive(false);
             Debug.Log(Email);
-            APIClient.Instance.Login(Email, Password);
+            var login = await APIClient.Instance.Login(Email, Password);
+            if (login == null)
+            {
+                Text.gameObject.SetActive(true);
+            }
+            else
+            {
+                Text.gameObject.SetActive(false);
+            }
         }
         else
         {
