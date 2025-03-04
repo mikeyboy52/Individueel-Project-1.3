@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -7,10 +8,12 @@ public class WorldSelctorManager : MonoBehaviour
     public TMP_InputField WorldName;
     public string Name;
     public GameObject ErrorCreatingWorld;
+    public GameObject ExistingWorld;
 
     public void Start()
     {
         ErrorCreatingWorld.gameObject.SetActive(false);
+        ExistingWorld.gameObject.SetActive(false);
     }
     public void ReadWorldName()
     {
@@ -18,11 +21,33 @@ public class WorldSelctorManager : MonoBehaviour
     }
     public void CreateWorldFromName()
     {
-        if (name != null)
+        if (Name != null)
         {
             ErrorCreatingWorld.gameObject.SetActive(false);
-            APIClient.Instance.CreateWorld(Name);
-            SceneManager.LoadScene("RoomMakerCorner");
+            bool nameAlreadyExists = false;
+            foreach (var Enviroment in APIClient.Instance.Enviroments.Enviroments)
+            {
+                Debug.Log(Name);
+                Debug.Log(Enviroment.Name);
+                if (Name != Enviroment.Name)
+                {
+                    continue;
+                }
+                else
+                {
+                    nameAlreadyExists = true;
+                    break;
+                }
+            }
+            if (nameAlreadyExists == false)
+            {
+                APIClient.Instance.CreateWorld(Name);
+                SceneManager.LoadScene("RoomMakerCorner");
+            }
+            else
+            {
+                ExistingWorld.gameObject.SetActive(true);
+            }
         }
         else
         {

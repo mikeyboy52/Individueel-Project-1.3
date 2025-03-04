@@ -5,12 +5,15 @@ using UnityEngine;
 using System.Net.Cache;
 using UnityEngine.SceneManagement;
 using UnityEditor;
+using System;
 
 public class APIClient : MonoBehaviour
 {
     string token;
     string Email;
     string Worldname;
+    public EnviromentList Enviroments;
+    public int Worlds;
     public static APIClient Instance { get; private set; }
     void Awake()
     {
@@ -90,14 +93,18 @@ public class APIClient : MonoBehaviour
             Worldname = worldname;
         }
     }
-    public async void GetAllWorldsForUser()
+    public async Task GetAllWorldsForUser()
     {
-        var request = new GetWorldsOfUserDto()
+        var encodedEmail = Uri.EscapeDataString(Email);
+        var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Enviroment/{encodedEmail}", "GET", token);
+        if (!string.IsNullOrEmpty(response) && response != "[]")
         {
-            Email = Email
-        };
-        var jsondata = JsonUtility.ToJson(request);
-        var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/Enviroment/", "GET", jsondata, token);
+            string wrappedResponse = "{\"Enviroments\":" + response + "}";
+            EnviromentList list = JsonUtility.FromJson<EnviromentList>(wrappedResponse);
+            Enviroments = list;
+            Worlds = Enviroments.Enviroments.Length;
+        }
+        
     } 
     //public async void EditWorld(string worldname)
     //{
@@ -147,6 +154,7 @@ public class APIClient : MonoBehaviour
                 else if (request.error == "HTTP/1.1 401 Unauthorized")
                 {
                     Debug.Log("Not Authorized");
+
                 }
                 else
                 {
