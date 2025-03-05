@@ -12,7 +12,9 @@ public class APIClient : MonoBehaviour
     string token;
     string Email;
     string Worldname;
+    public Guid WorldId;
     public EnviromentList Enviroments;
+    public Enviroment ChosenWorld;
     public int Worlds;
     public static APIClient Instance { get; private set; }
     void Awake()
@@ -95,29 +97,53 @@ public class APIClient : MonoBehaviour
     }
     public async Task GetAllWorldsForUser()
     {
-        var encodedEmail = Uri.EscapeDataString(Email);
-        var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Enviroment/{encodedEmail}", "GET", token);
+        var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Enviroment/{Email}", "GET", null, token);
         if (!string.IsNullOrEmpty(response) && response != "[]")
         {
             string wrappedResponse = "{\"Enviroments\":" + response + "}";
+            Debug.Log(wrappedResponse);
             EnviromentList list = JsonUtility.FromJson<EnviromentList>(wrappedResponse);
             Enviroments = list;
             Worlds = Enviroments.Enviroments.Length;
         }
         
-    } 
-    //public async void EditWorld(string worldname)
-    //{
-    //    var request = new PostCreateWorldRequestDto()
-    //    {
-    //        Name = worldname,
-    //        Email = Email,
-    //        Maxheight = 120,
-    //        MaxLength = 120
-    //    };
-    //    var jsondata = JsonUtility.ToJson(request);
-    //    var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/Enviroment", "GET", jsondata, token);
-    //}
+    }
+    public async Task GetWorldFromNameFromUser()
+    {
+        Debug.Log($"https://avansict2227459.azurewebsites.net/Enviroment?email={Email}&Name={Worldname}");
+        var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Enviroment?email={Email}&Name={Worldname}", "GET", null, token);
+        if (!string.IsNullOrEmpty(response) && response != "[]")
+        {
+            ChosenWorld = JsonUtility.FromJson<Enviroment>(response);
+        }
+
+    }
+    public async void EditWorld(string worldname)
+    {
+        var request = new GetWorldByNameFromUserDto()
+        {
+            Id = WorldId,
+            Name = worldname,
+            Email = Email,
+            Maxheight = 120,
+            MaxLength = 120
+        };
+        var jsondata = JsonUtility.ToJson(request);
+        var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Enviroment/{WorldId}", "PUT", jsondata, token);
+        if (response != null)
+        {
+            Debug.Log("Edited World");
+        }
+    }
+    public async void DeleteWorld(Guid Id)
+    {
+        Debug.Log(WorldId);
+        var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Enviroment/{Id}", "DELETE", null, token);
+        if (response != null)
+        {
+            Debug.Log("Deleted World");
+        }
+    }
     private async Task<string> PerformApiCall(string url, string method, string jsonData = null, string token = null)
     {
         using (UnityWebRequest request = new UnityWebRequest(url, method))
@@ -133,6 +159,7 @@ public class APIClient : MonoBehaviour
 
             if (!string.IsNullOrEmpty(token))
             {
+                Debug.Log("Token not empty");
                 request.SetRequestHeader("Authorization", "Bearer " + token);
             }
 
@@ -154,6 +181,7 @@ public class APIClient : MonoBehaviour
                 else if (request.error == "HTTP/1.1 401 Unauthorized")
                 {
                     Debug.Log("Not Authorized");
+                    Debug.Log(token);
 
                 }
                 else

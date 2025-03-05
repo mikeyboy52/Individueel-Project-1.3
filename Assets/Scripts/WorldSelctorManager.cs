@@ -9,6 +9,7 @@ public class WorldSelctorManager : MonoBehaviour
     public string Name;
     public GameObject ErrorCreatingWorld;
     public GameObject ExistingWorld;
+    public Enviroment enviroment;
 
     public void Start()
     {
@@ -19,7 +20,7 @@ public class WorldSelctorManager : MonoBehaviour
     {
         Name = WorldName.text;
     }
-    public void CreateWorldFromName()
+    public async void CreateWorldFromName()
     {
         if (Name != null)
         {
@@ -42,6 +43,10 @@ public class WorldSelctorManager : MonoBehaviour
             if (nameAlreadyExists == false)
             {
                 APIClient.Instance.CreateWorld(Name);
+                await APIClient.Instance.GetWorldFromNameFromUser();
+                enviroment = APIClient.Instance.ChosenWorld;
+                Debug.Log(enviroment.id);
+                APIClient.Instance.WorldId = enviroment.id;
                 SceneManager.LoadScene("RoomMakerCorner");
             }
             else
