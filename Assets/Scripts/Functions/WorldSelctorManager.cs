@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -28,8 +29,6 @@ public class WorldSelctorManager : MonoBehaviour
             bool nameAlreadyExists = false;
             foreach (var Enviroment in APIClient.Instance.Enviroments.Enviroments)
             {
-                Debug.Log(Name);
-                Debug.Log(Enviroment.Name);
                 if (Name != Enviroment.Name)
                 {
                     continue;
@@ -45,8 +44,7 @@ public class WorldSelctorManager : MonoBehaviour
                 APIClient.Instance.CreateWorld(Name);
                 await APIClient.Instance.GetWorldFromNameFromUser();
                 enviroment = APIClient.Instance.ChosenWorld;
-                Debug.Log(enviroment.id);
-                APIClient.Instance.WorldId = enviroment.id;
+                APIClient.Instance.WorldId = Guid.Parse(enviroment.id);
                 SceneManager.LoadScene("RoomMakerCorner");
             }
             else

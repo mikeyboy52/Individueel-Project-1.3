@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEngine.Windows;
 
 public class WorldSelectionVisibilityManager : MonoBehaviour
 {
@@ -17,12 +18,16 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
     public GameObject settingsPanel;
     public GameObject DeletePanel;
     public GameObject ErrorCreatingWorld;
+    public GameObject ErrorEdittingWorld;
     public GameObject buttonPrefab;
     public Transform buttonPanel;
+    public TMP_InputField EditName;
     public List<GameObject> Buttons;
     public Enviroment[] worlds;
     public Enviroment ChosenWorld;
     public Guid ChosenWorldId;
+    public string WorldName;
+    
 
     public async void Start()
     {
@@ -34,7 +39,6 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
         ShowObject(MenuPanel);
         await APIClient.Instance.GetAllWorldsForUser();
         worlds = APIClient.Instance.Enviroments.Enviroments;
-        Debug.Log(worlds[1].id);
         PopulateWorldButtons();
     }
     public void CreateWorldPopup()
@@ -57,8 +61,6 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
     {
         foreach (Enviroment enviroment in worlds)
         {
-            Debug.Log(enviroment.Name);
-            Debug.Log(enviroment.id);
             GameObject button = Instantiate(buttonPrefab, buttonPanel);
 
             TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>();
@@ -83,25 +85,25 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
         MenuPanel.SetActive(false);
         ChosenWorld = world;
         Debug.Log(ChosenWorld.Name);
-        Debug.Log(ChosenWorld.id);
     }
 
     public void EditWorldButton()
     {
         EditWorldPanel.SetActive(true);
         settingsPanel.SetActive(false);
-        ChosenWorldId = ChosenWorld.id;
+        ChosenWorldId = Guid.Parse(ChosenWorld.id);
+        APIClient.Instance.WorldId = ChosenWorldId;
     }
     public void DeleteWorldButton()
     {
         settingsPanel.SetActive(false);
         DeletePanel.SetActive(true);
-        ChosenWorldId = ChosenWorld.id;
+        ChosenWorldId = Guid.Parse(ChosenWorld.id);
+        APIClient.Instance.WorldId = ChosenWorldId;
     }
     public async void DeleteWorld()
     {
-        Debug.Log(ChosenWorld.id);
-        APIClient.Instance.DeleteWorld(ChosenWorld.id);
+        APIClient.Instance.DeleteWorld(ChosenWorldId);
         await APIClient.Instance.GetAllWorldsForUser();
         worlds = APIClient.Instance.Enviroments.Enviroments;
         DeleteWorldButtons();
@@ -109,20 +111,38 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
         HideObject(DeletePanel);
         ShowObject(MenuPanel);
     }
+    public void EditTextMethod()
+    {
+        WorldName = EditName.text;
+    }
     public async void EditWorld()
     {
-        APIClient.Instance.EditWorld(ChosenWorld.Name);
-        await APIClient.Instance.GetAllWorldsForUser();
-        worlds = APIClient.Instance.Enviroments.Enviroments;
-        DeleteWorldButtons();
-        PopulateWorldButtons();
-        HideObject(EditWorldPanel);
-        ShowObject(MenuPanel);
+        if (WorldName != null)
+        {
+            ErrorEdittingWorld.SetActive(false);
+            APIClient.Instance.EditWorld(WorldName);
+            await APIClient.Instance.GetAllWorldsForUser();
+            worlds = APIClient.Instance.Enviroments.Enviroments;
+            DeleteWorldButtons();
+            PopulateWorldButtons();
+            HideObject(EditWorldPanel);
+            ShowObject(MenuPanel);
+        }
+        else
+        {
+            ErrorEdittingWorld.SetActive(true);
+        }
+
     }
     public void JoinWorld()
     {
+        ChosenWorldId = Guid.Parse(ChosenWorld.id);
         APIClient.Instance.WorldId = ChosenWorldId;
         SceneManager.LoadScene("RoomMakerCorner");
+    }
+    public async void Logout()
+    {
+        await APIClient.Instance.Logout();
     }
 
     public void ChangeVisibilityOfObject(bool show, GameObject panel)

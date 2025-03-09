@@ -6,6 +6,7 @@ using System.Net.Cache;
 using UnityEngine.SceneManagement;
 using UnityEditor;
 using System;
+using NUnit.Framework;
 
 public class APIClient : MonoBehaviour
 {
@@ -15,6 +16,7 @@ public class APIClient : MonoBehaviour
     public Guid WorldId;
     public EnviromentList Enviroments;
     public Enviroment ChosenWorld;
+    public ObjectList objects;
     public int Worlds;
     public static APIClient Instance { get; private set; }
     void Awake()
@@ -67,8 +69,6 @@ public class APIClient : MonoBehaviour
         var responseDto = JsonUtility.FromJson<PostLoginResponseDto>(response);
         if (responseDto != null)
         {
-            
-            Debug.Log(responseDto.accessToken);
             token = responseDto.accessToken;
             SceneManager.LoadScene("WorldSelection");
             return "Succes";
@@ -76,6 +76,20 @@ public class APIClient : MonoBehaviour
         else
         {
             return null;
+        }
+    }
+    public async Task Logout()
+    {
+        var request = new PostLogoutRequestDto()
+        {
+            Email = Email
+        };
+        var jsondata = JsonUtility.ToJson(request);
+        var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/account/logout", "POST", jsondata, token);
+        if (response != null)
+        {
+            token = "";
+            SceneManager.LoadScene("StartScreen");
         }
     }
     public async void CreateWorld(string worldname)
@@ -101,7 +115,6 @@ public class APIClient : MonoBehaviour
         if (!string.IsNullOrEmpty(response) && response != "[]")
         {
             string wrappedResponse = "{\"Enviroments\":" + response + "}";
-            Debug.Log(wrappedResponse);
             EnviromentList list = JsonUtility.FromJson<EnviromentList>(wrappedResponse);
             Enviroments = list;
             Worlds = Enviroments.Enviroments.Length;
@@ -110,7 +123,6 @@ public class APIClient : MonoBehaviour
     }
     public async Task GetWorldFromNameFromUser()
     {
-        Debug.Log($"https://avansict2227459.azurewebsites.net/Enviroment?email={Email}&Name={Worldname}");
         var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Enviroment?email={Email}&Name={Worldname}", "GET", null, token);
         if (!string.IsNullOrEmpty(response) && response != "[]")
         {
@@ -122,13 +134,14 @@ public class APIClient : MonoBehaviour
     {
         var request = new GetWorldByNameFromUserDto()
         {
-            Id = WorldId,
+            Id = Convert.ToString(WorldId),
             Name = worldname,
             Email = Email,
             Maxheight = 120,
             MaxLength = 120
         };
         var jsondata = JsonUtility.ToJson(request);
+        Debug.Log(jsondata);
         var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Enviroment/{WorldId}", "PUT", jsondata, token);
         if (response != null)
         {
@@ -137,12 +150,61 @@ public class APIClient : MonoBehaviour
     }
     public async void DeleteWorld(Guid Id)
     {
-        Debug.Log(WorldId);
         var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Enviroment/{Id}", "DELETE", null, token);
         if (response != null)
         {
             Debug.Log("Deleted World");
         }
+    }
+    public async void CreateObject(Object2D object2D)
+    {
+        var request = new PostCreateObjectRequestDto()
+        {
+            EnviromentId = Convert.ToString(object2D.EnviromentId),
+            PrefabId = object2D.PrefabId,
+            PositionX = object2D.posX,
+            PositionY = object2D.posY,
+            ScaleX = object2D.scaleX,
+            ScaleY = object2D.scaleY,
+            RotationZ = object2D.rotZ,
+            SortingLayer = object2D.sortingLayer
+        };
+        var jsondata = JsonUtility.ToJson(request);
+        Debug.Log(jsondata);
+        var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/Object2D", "POST", jsondata, token);
+        if (response != null)
+        {
+            Debug.Log("Succesfully created Object");
+        }
+    }
+    public async Task<string> GetAllObjectsForEnviroment()
+    {
+        Debug.Log(WorldId);
+        var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Object2D/{WorldId}", "GET", null, token);
+        Debug.Log(response);
+        if (!string.IsNullOrEmpty(response) && response != "[]")
+        {
+            string wrappedResponse = "{\"Objects\":" + response + "}";
+            Debug.Log(wrappedResponse);
+            ObjectList list = JsonUtility.FromJson<ObjectList>(wrappedResponse);
+            if (list.Objects.Length > 0)
+            {
+                objects = list;
+                Debug.Log(list.Objects);
+                return "true";
+            }
+            else
+            {
+                Debug.Log("Objects not available");
+                return null;
+            }
+        }
+        else
+        {
+            Debug.Log("Empty");
+            return null;
+        }
+
     }
     private async Task<string> PerformApiCall(string url, string method, string jsonData = null, string token = null)
     {
@@ -159,7 +221,6 @@ public class APIClient : MonoBehaviour
 
             if (!string.IsNullOrEmpty(token))
             {
-                Debug.Log("Token not empty");
                 request.SetRequestHeader("Authorization", "Bearer " + token);
             }
 
