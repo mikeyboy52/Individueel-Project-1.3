@@ -2348,7 +2348,7 @@ MonoBehaviour:
   settingsPanel: {fileID: 1620613565}
   DeletePanel: {fileID: 53418695}
   ErrorCreatingWorld: {fileID: 1306337603}
-  ErrorEdittingWorld: {fileID: 0}
+  ErrorEdittingWorld: {fileID: 1471564715}
   buttonPrefab: {fileID: 4422551084339259492, guid: 2c12b0d1749b34e4184bd4615317b374, type: 3}
   buttonPanel: {fileID: 1265115979}
   EditName: {fileID: 831848800}
