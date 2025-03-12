@@ -20,6 +20,8 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
     public GameObject ErrorCreatingWorld;
     public GameObject ErrorEdittingWorld;
     public GameObject buttonPrefab;
+    public GameObject ErrorCreatingWorldPopup;
+    public GameObject ExistingWorld;
     public Transform buttonPanel;
     public TMP_InputField EditName;
     public List<GameObject> Buttons;
@@ -27,7 +29,8 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
     public Enviroment ChosenWorld;
     public Guid ChosenWorldId;
     public string WorldName;
-    
+    public TMP_InputField WorldNames;
+    public string Name;
 
     public async void Start()
     {
@@ -37,6 +40,8 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
         HideObject(ErrorCreatingWorld);
         HideObject(DeletePanel);
         ShowObject(MenuPanel);
+        ErrorCreatingWorldPopup.gameObject.SetActive(false);
+        ExistingWorld.gameObject.SetActive(false);
         await APIClient.Instance.GetAllWorldsForUser();
         worlds = APIClient.Instance.Enviroments.Enviroments;
         PopulateWorldButtons();
@@ -155,5 +160,47 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
     public async void Logout()
     {
         await APIClient.Instance.Logout();
+    }
+    public void ReadWorldName()
+    {
+        Name = WorldNames.text;
+    }
+    public async void CreateWorldFromName()
+    {
+        if (Name != null)
+        {
+            ErrorCreatingWorldPopup.gameObject.SetActive(false);
+            bool nameAlreadyExists = false;
+            foreach (var Enviroment in APIClient.Instance.Enviroments.Enviroments)
+            {
+                if (Name != Enviroment.Name)
+                {
+                    continue;
+                }
+                else
+                {
+                    nameAlreadyExists = true;
+                    break;
+                }
+            }
+            if (nameAlreadyExists == false)
+            {
+                APIClient.Instance.CreateWorld(Name);
+                await APIClient.Instance.GetAllWorldsForUser();
+                worlds = APIClient.Instance.Enviroments.Enviroments;
+                DeleteWorldButtons();
+                PopulateWorldButtons();
+                CreateWorldPanel.gameObject.SetActive(false);
+                MenuPanel.gameObject.SetActive(true);
+            }
+            else
+            {
+                ExistingWorld.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            ErrorCreatingWorldPopup.gameObject.SetActive(true);
+        }
     }
 }

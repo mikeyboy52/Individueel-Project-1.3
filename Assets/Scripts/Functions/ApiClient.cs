@@ -102,11 +102,14 @@ public class APIClient : MonoBehaviour
             MaxLength = 120
         };
         var jsondata = JsonUtility.ToJson(request);
+        Debug.Log(jsondata);
         var response = await PerformApiCall("https://avansict2227459.azurewebsites.net/Enviroment", "POST", jsondata, token);
         if (response != null)
         {
             Debug.Log("Succesfully created a new world");
+            Debug.Log(worldname);
             Worldname = worldname;
+            Debug.Log("Created World: " + Worldname);
         }
     }
     public async Task GetAllWorldsForUser()
@@ -121,12 +124,19 @@ public class APIClient : MonoBehaviour
         }
         
     }
-    public async Task GetWorldFromNameFromUser()
+    public async Task<bool> GetWorldFromNameFromUser()
     {
+        Debug.Log(Email);
+        Debug.Log(Worldname);
         var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Enviroment?email={Email}&Name={Worldname}", "GET", null, token);
         if (!string.IsNullOrEmpty(response) && response != "[]")
         {
             ChosenWorld = JsonUtility.FromJson<Enviroment>(response);
+            return true;
+        }
+        else
+        {
+            return false;
         }
 
     }
@@ -179,18 +189,14 @@ public class APIClient : MonoBehaviour
     }
     public async Task<string> GetAllObjectsForEnviroment()
     {
-        Debug.Log(WorldId);
         var response = await PerformApiCall($"https://avansict2227459.azurewebsites.net/Object2D/{WorldId}", "GET", null, token);
-        Debug.Log(response);
         if (!string.IsNullOrEmpty(response) && response != "[]")
         {
             string wrappedResponse = "{\"Objects\":" + response + "}";
-            Debug.Log(wrappedResponse);
             ObjectList list = JsonUtility.FromJson<ObjectList>(wrappedResponse);
             if (list.Objects.Length > 0)
             {
                 objects = list;
-                Debug.Log(list.Objects);
                 return "true";
             }
             else

@@ -12,14 +12,6 @@ public class MenuPanel : MonoBehaviour
 
     public async void Start()
     {
-        if (APIClient.Instance == null)
-        {
-            Debug.Log("Client not working");
-        }
-        else
-        {
-            Debug.Log("Client Working");
-        }
         var Objects = await APIClient.Instance.GetAllObjectsForEnviroment();
         if (Objects != null)
         {
