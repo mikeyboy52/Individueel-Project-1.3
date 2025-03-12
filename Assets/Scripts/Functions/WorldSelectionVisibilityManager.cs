@@ -41,6 +41,50 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
         worlds = APIClient.Instance.Enviroments.Enviroments;
         PopulateWorldButtons();
     }
+
+    public void ChangeVisibilityOfObject(bool show, GameObject panel)
+    {
+        panel.gameObject.SetActive(show);
+    }
+
+    public void ShowObject(GameObject panel)
+    {
+        ChangeVisibilityOfObject(true, panel);
+    }
+
+    public void HideObject(GameObject panel)
+    {
+        ChangeVisibilityOfObject(false, panel);
+    }
+    public void PopulateWorldButtons()
+    {
+        foreach (Enviroment enviroment in worlds)
+        {
+            GameObject button = Instantiate(buttonPrefab, buttonPanel);
+
+            TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>();
+            buttonText.text = enviroment.Name;
+
+            Button buttonComponent = button.GetComponent<Button>();
+            buttonComponent.onClick.AddListener(() => OnWorldButtonClicked(enviroment));
+            Buttons.Add(button);
+        }
+    }
+    void OnWorldButtonClicked(Enviroment world)
+    {
+        Debug.Log("Wereld geselecteerd: " + world.Name);
+        settingsPanel.SetActive(true);
+        MenuPanel.SetActive(false);
+        ChosenWorld = world;
+        Debug.Log(ChosenWorld.Name);
+    }
+    public void DeleteWorldButtons()
+    {
+        foreach (var button in Buttons)
+        {
+            Destroy(button);
+        }
+    }
     public void CreateWorldPopup()
     {
         int Worldcount = APIClient.Instance.Worlds;
@@ -56,60 +100,18 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
             ErrorCreatingWorld.gameObject.SetActive(true);
         }
     }
-
-    public void PopulateWorldButtons()
+    public void JoinWorld()
     {
-        foreach (Enviroment enviroment in worlds)
-        {
-            GameObject button = Instantiate(buttonPrefab, buttonPanel);
-
-            TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>();
-            buttonText.text = enviroment.Name;
-
-            Button buttonComponent = button.GetComponent<Button>();
-            buttonComponent.onClick.AddListener(() => OnWorldButtonClicked(enviroment));
-            Buttons.Add(button);
-        }
+        ChosenWorldId = Guid.Parse(ChosenWorld.id);
+        APIClient.Instance.WorldId = ChosenWorldId;
+        SceneManager.LoadScene("RoomMakerCorner");
     }
-    public void DeleteWorldButtons()
-    {
-        foreach (var button in Buttons)
-        {
-            Destroy(button);
-        }
-    }
-    void OnWorldButtonClicked(Enviroment world)
-    {
-        Debug.Log("Wereld geselecteerd: " + world.Name);
-        settingsPanel.SetActive(true);
-        MenuPanel.SetActive(false);
-        ChosenWorld = world;
-        Debug.Log(ChosenWorld.Name);
-    }
-
     public void EditWorldButton()
     {
         EditWorldPanel.SetActive(true);
         settingsPanel.SetActive(false);
         ChosenWorldId = Guid.Parse(ChosenWorld.id);
         APIClient.Instance.WorldId = ChosenWorldId;
-    }
-    public void DeleteWorldButton()
-    {
-        settingsPanel.SetActive(false);
-        DeletePanel.SetActive(true);
-        ChosenWorldId = Guid.Parse(ChosenWorld.id);
-        APIClient.Instance.WorldId = ChosenWorldId;
-    }
-    public async void DeleteWorld()
-    {
-        APIClient.Instance.DeleteWorld(ChosenWorldId);
-        await APIClient.Instance.GetAllWorldsForUser();
-        worlds = APIClient.Instance.Enviroments.Enviroments;
-        DeleteWorldButtons();
-        PopulateWorldButtons();
-        HideObject(DeletePanel);
-        ShowObject(MenuPanel);
     }
     public void EditTextMethod()
     {
@@ -132,32 +134,26 @@ public class WorldSelectionVisibilityManager : MonoBehaviour
         {
             ErrorEdittingWorld.SetActive(true);
         }
-
     }
-    public void JoinWorld()
+    public void DeleteWorldButton()
     {
+        settingsPanel.SetActive(false);
+        DeletePanel.SetActive(true);
         ChosenWorldId = Guid.Parse(ChosenWorld.id);
         APIClient.Instance.WorldId = ChosenWorldId;
-        SceneManager.LoadScene("RoomMakerCorner");
+    }
+    public async void DeleteWorld()
+    {
+        APIClient.Instance.DeleteWorld(ChosenWorldId);
+        await APIClient.Instance.GetAllWorldsForUser();
+        worlds = APIClient.Instance.Enviroments.Enviroments;
+        DeleteWorldButtons();
+        PopulateWorldButtons();
+        HideObject(DeletePanel);
+        ShowObject(MenuPanel);
     }
     public async void Logout()
     {
         await APIClient.Instance.Logout();
     }
-
-    public void ChangeVisibilityOfObject(bool show, GameObject panel)
-    {
-        panel.gameObject.SetActive(show);
-    }
-
-    public void ShowObject(GameObject panel)
-    {
-        ChangeVisibilityOfObject(true, panel);
-    }
-    
-    public void HideObject(GameObject panel)
-    {
-        ChangeVisibilityOfObject(false, panel);
-    }
-
 }
